@@ -1,0 +1,36 @@
+{
+  "name": "@garbados/html-alchemist",
+  "version": "1.0.0",
+  "description": "Reagent-style HTML templating, for use with WebComponents",
+  "main": "index.js",
+  "scripts": {
+    "precommit": "standard --fix",
+    "commit": "git add -p && git commit",
+    "test": "standard && mocha",
+    "build": "rollup -i playground.js -o www/web.js",
+    "dev": "sane \"npm run build\" . --glob={playground,index}.js",
+    "serve": "serve www"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/garbados/html-alchemist.git"
+  },
+  "keywords": [
+    "html",
+    "webcomponents"
+  ],
+  "author": "Diana Belle <garbados@gmail.com>",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/garbados/html-alchemist/issues"
+  },
+  "homepage": "https://github.com/garbados/html-alchemist#readme",
+  "devDependencies": {
+    "fast-check": "^3.23.2",
+    "mocha": "^11.0.1",
+    "rollup": "^4.30.0",
+    "sane": "^5.0.1",
+    "serve": "^14.2.4",
+    "standard": "^17.1.2"
+  }
+}
