@@ -1,13 +1,14 @@
-import { alchemize } from './index.js'
+/* global HTMLElement, customElements */
+import { alchemize } from './index'
 
-const input = [
+const INPUT = [
   // put your alchemy here
   ['h1', 'hello world']
 ]
 
 class Playground extends HTMLElement {
   connectedCallback () {
-    this.innerHTML = alchemize(input)
+    this.innerHTML = alchemize(INPUT)
   }
 }
 

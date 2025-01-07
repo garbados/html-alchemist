@@ -2,14 +2,23 @@
   "name": "@garbados/html-alchemist",
   "version": "1.0.0",
   "description": "Reagent-style HTML templating, for use with WebComponents",
+  "type": "module",
   "main": "index.js",
+  "files": [
+    "constants.js",
+    "index.js",
+    "README.md"
+  ],
   "scripts": {
     "precommit": "standard --fix",
     "commit": "git add -p && git commit",
     "test": "standard && mocha",
     "build": "rollup -i playground.js -o www/web.js",
-    "dev": "sane \"npm run build\" . --glob={playground,index}.js",
-    "serve": "serve www"
+    "release": "npm run build && uglifyjs www/web.js -o www/web.min.js -c -m --toplevel",
+    "watch": "sane \"npm run build\" . --glob={constants,playground,index}.js",
+    "serve": "serve www",
+    "dev": "run-p watch serve",
+    "coverage": "c8 npm test"
   },
   "repository": {
     "type": "git",
@@ -26,11 +35,15 @@
   },
   "homepage": "https://github.com/garbados/html-alchemist#readme",
   "devDependencies": {
+    "c8": "^10.1.3",
     "fast-check": "^3.23.2",
+    "html-validate": "^9.1.1",
     "mocha": "^11.0.1",
+    "npm-run-all2": "^7.0.2",
     "rollup": "^4.30.0",
     "sane": "^5.0.1",
     "serve": "^14.2.4",
-    "standard": "^17.1.2"
+    "standard": "^17.1.2",
+    "uglify-js": "^3.19.3"
   }
 }

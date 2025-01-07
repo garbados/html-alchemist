@@ -81,15 +81,21 @@ Run the test suite:
 npm test
 ```
 
+Get test coverage info:
+
+```bash
+npm run coverage
+```
+
 Or, to mess around rendering arbitrary HTML...
 
 ```bash
 # run the playground server
-npm run playground
+npm run dev
 # edit playground.js
 vi playground.js
 # now visit http://localhost:3000
-# it will update whenever *.js files change
+# it will update whenever index.js or playground.js change
 ```
 
 ## License
