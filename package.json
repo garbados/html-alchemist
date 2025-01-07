@@ -1,7 +1,7 @@
 {
   "name": "@garbados/html-alchemist",
   "version": "1.0.0",
-  "description": "Reagent-style HTML templating, for use with WebComponents",
+  "description": "Reagent-style HTML templating.",
   "type": "module",
   "main": "index.js",
   "files": [
