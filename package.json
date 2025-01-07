@@ -1,5 +1,5 @@
 {
-  "name": "@garbados/html-alchemist",
+  "name": "html-alchemist",
   "version": "1.0.0",
   "description": "Reagent-style HTML templating.",
   "type": "module",

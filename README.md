@@ -59,7 +59,7 @@ class YourElement extends HTMLElement {
 Get it on NPM:
 
 ```bash
-npm i -S @garbados/html-alchemist
+npm i -S html-alchemist
 ```
 
 Or use [pnmp](https://pnpm.io/) or whatever.
@@ -67,7 +67,7 @@ Or use [pnmp](https://pnpm.io/) or whatever.
 Then you can import it in your project:
 
 ```js
-import { alchemize } from '@garbados/html-alchemist'
+import { alchemize } from 'html-alchemist'
 ```
 
 ## Usage
