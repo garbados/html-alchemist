@@ -18,7 +18,8 @@
     "watch": "sane \"npm run build\" . --glob={constants,playground,index}.js",
     "serve": "serve www",
     "dev": "run-p watch serve",
-    "coverage": "c8 npm test"
+    "coverage": "c8 npm test",
+    "lcov": "c8 --reporter=\"lcovonly\" npm test"
   },
   "repository": {
     "type": "git",

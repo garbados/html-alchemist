@@ -18,3 +18,24 @@ jobs:
 
       - name: Run tests
         run: npm test
+  coverage:
+    runs-on: ubuntu-latest
+    needs: test
+    steps:
+    - name: Checkout
+      uses: actions/checkout@v4
+
+    - name: Install NodeJS
+      uses: dcodeIO/setup-node-nvm@master
+      with:
+        node-version: lts/*
+
+    - run: npm i
+
+    - name: Get coverage
+      run: npm run lcov
+
+    - name: Coveralls
+      uses: coverallsapp/github-action@v2
+      with:
+        file: './coverage/lcov.info'
