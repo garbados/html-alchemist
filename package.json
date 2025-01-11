@@ -14,11 +14,11 @@
     "commit": "git add -p && git commit",
     "test": "standard && mocha",
     "build": "rollup -i playground.js -o www/web.js",
-    "release": "npm run build && uglifyjs www/web.js -o www/web.min.js -c -m --toplevel",
+    "minsize": "terser index.js -c -m -o index.min.js && stat index.min.js && rm index.min.js",
     "watch": "sane \"npm run build\" . --glob={constants,playground,index}.js",
     "serve": "serve www",
     "dev": "run-p watch serve",
-    "coverage": "c8 npm test",
+    "cov": "c8 npm test",
     "lcov": "c8 --reporter=\"lcovonly\" npm test"
   },
   "repository": {
@@ -45,6 +45,6 @@
     "sane": "^5.0.1",
     "serve": "^14.2.4",
     "standard": "^17.1.2",
-    "uglify-js": "^3.19.3"
+    "terser": "^5.37.0"
   }
 }

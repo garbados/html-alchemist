@@ -57,3 +57,22 @@ export function alchemize (expr) {
     throw new Error(`What? ${expr}`)
   }
 }
+
+let mydocument
+try {
+  mydocument = document
+} catch (e) {
+  console.warn(`[html-alchemist] Could not find \`document\`: ${e.message}`)
+}
+
+export function sanctify (tagName, unsafeString, document = mydocument) {
+  if (!document) throw new Error('Missing document context. If you are not in a browser, you must pass a `document` parameter.')
+  // create an enclosing node
+  const enclosing = document.createElement(tagName)
+  // create a text node to contain our unsafe input
+  const escaped = document.createTextNode(unsafeString)
+  // put one in the other
+  enclosing.appendChild(escaped)
+  // return the outer HTML, which includes the enclosing tag
+  return enclosing.outerHTML
+}

@@ -1,5 +1,5 @@
 /* global describe, it */
-import { alchemize } from './index.js'
+import { alchemize, sanctify } from './index.js'
 import * as fc from 'fast-check'
 import { HtmlValidate, formatterFactory } from 'html-validate'
 import { HTML_TAGS } from './constants.js'
@@ -7,6 +7,7 @@ import * as assert from 'assert/strict'
 
 // some tags are hard to test so lol don't
 const WEIRD_TAGS = [
+  'a',
   'abbr',
   'address',
   'area',
@@ -16,35 +17,35 @@ const WEIRD_TAGS = [
   'bdi',
   'bdo',
   'body',
+  'button',
+  'dd',
+  'details',
+  'dl',
+  'dt',
+  'embed',
   'fieldset',
   'footer',
-  'head',
-  'header',
-  'html',
-  'main',
-  'map',
-  'nav',
-  'section',
-  'th',
   'form',
-  'input',
-  'button',
-  'title',
   'h1',
   'h2',
   'h3',
   'h4',
   'h5',
   'h6',
-  'details',
-  'object',
-  'link',
-  'img',
+  'head',
+  'header',
+  'html',
   'iframe',
-  'embed',
-  'dd',
-  'dt',
-  'dl'
+  'img',
+  'input',
+  'link',
+  'main',
+  'map',
+  'nav',
+  'object',
+  'section',
+  'th',
+  'title'
 ]
 const TEST_HTML_TAGS = HTML_TAGS.filter(s => !WEIRD_TAGS.includes(s))
 // validator
@@ -137,5 +138,35 @@ describe('html-alchemist', function () {
     } catch (e) {
       assert.strictEqual(e.message.slice(0, expected.length), expected)
     }
+  })
+
+  it('should sanitize inputs when asked to', function () {
+    const children = []
+    const sanitizeHtml = (s) => {
+      return s.replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#039;')
+    }
+    const fakedocument = {
+      createElement (tagName) {
+        return {
+          appendChild (child) {
+            children.push(child)
+          },
+          get outerHTML () {
+            return alchemize([tagName, children.join('')])
+          }
+        }
+      },
+      createTextNode (unsafeString) {
+        return sanitizeHtml(unsafeString)
+      }
+    }
+    const unsafeInput = '<h1>hello world</h1>'
+    const expected = `<p>${sanitizeHtml(unsafeInput)}</p>`
+    const actual = sanctify('p', unsafeInput, fakedocument)
+    assert.strictEqual(expected, actual, `Mismatch: ${actual} actual; expected: ${expected}`)
   })
 })

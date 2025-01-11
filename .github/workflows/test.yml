@@ -12,7 +12,7 @@ jobs:
       - name: Install NodeJS
         uses: dcodeIO/setup-node-nvm@master
         with:
-          node-version: lts/* 
+          node-version: lts/*
 
       - run: npm i
 

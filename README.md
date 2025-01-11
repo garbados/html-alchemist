@@ -3,9 +3,7 @@
 [![Build and Test](https://github.com/garbados/html-alchemist/actions/workflows/test.yml/badge.svg)](https://github.com/garbados/html-alchemist/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/garbados/html-alchemist/badge.svg?branch=main)](https://coveralls.io/github/garbados/html-alchemist?branch=main)
 
-Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into strings of HTML. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small. 859 bytes, minified, before compression.
-
-**NOTE**: *As of this writing, Alchemist does not HTML-escape its inputs. That's **your** job.*
+Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into strings of HTML. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small. About 1 kilobyte, minified, before compression.
 
 Example:
 
@@ -54,6 +52,20 @@ class YourElement extends HTMLElement {
 }
 ```
 
+Alchemist supplies an HTML encoding function
+for alchemizing unsafe inputs, named `sanctify`.
+Be sure to use it when you need it!
+
+```js
+// UNSAFE: CODE INJECTIONS AHOY!
+this.innerHTML = alchemize(['div', userInput])
+// <div><h1>hello world</h1></div>
+
+// SAFE: NOT THIS TIME, HACKER!!
+this.innerHTML = sanctify('div', userInput)
+// <div>&lt;h1&gt;hello world&lt;/h1&gt;</div>
+```
+
 ## Install
 
 Get it on NPM:
@@ -67,7 +79,7 @@ Or use [pnmp](https://pnpm.io/) or whatever.
 Then you can import it in your project:
 
 ```js
-import { alchemize } from 'html-alchemist'
+import { alchemize, sanctify } from 'html-alchemist'
 ```
 
 ## Usage
@@ -161,6 +173,36 @@ alchemize(['div.content', ['h1', 'have you heard the good word'], ['p', 'the wor
 
 That's it. Now you know alchemy.
 
+### Escaping Unsafe Inputs
+
+To prevent code injection, Alchemist exports `sanctify`,
+a function to escape HTML in untrusted strings.
+Rather than providing an alchemical expression,
+you provide an enclosing tag, with the text to escape.
+
+```js
+const userBlogPost = 'Dear diary, today I became a <script> tag.'
+sanctify('p', userBlogPost)
+// <p>Dear diary, today I became a &lt;script&gt; tag.</p>
+```
+
+Because `sanctify` returns a string, you can use it inside of alchemical expressions:
+
+```js
+alchemize([
+  ['h1', sanctify(userBlogTitle)],
+  ['p', sanctify(userBlogPost)]
+])
+```
+
+For more advanced HTML sanitization situations,
+like allowing some tags and not others,
+check out [@jitbit/htmlsanitizer](https://github.com/jitbit/HtmlSanitizer).
+
+Sanctify relies on the `document` object in a browser's context,
+so using it outside of the browser will require passing your own `document`,
+such as with [jsdom](https://github.com/jsdom/jsdom).
+
 ## Development
 
 Run the test suite:
@@ -172,7 +214,7 @@ npm test
 Get test coverage info:
 
 ```bash
-npm run coverage
+npm run cov
 ```
 
 Or, to mess around rendering arbitrary HTML...
@@ -186,7 +228,15 @@ vi playground.js
 # it will update whenever index.js or playground.js change
 ```
 
-You can also run `npm run release` to produce a minified version of the playground script. You can view it at `/min.html`, in case you want to see its footprint over the wire after some optimization.
+You can also run `npm run minsize` to stat a minified version of the source script:
+
+```bash
+npm run minsize
+
+  File: index.min.js
+  Size: 1309            Blocks: 8          IO Block: 4096   regular file
+  ...
+```
 
 ## License
 

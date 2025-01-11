@@ -1,5 +1,5 @@
 /* global HTMLElement, customElements */
-import { alchemize } from './index'
+import { alchemize, sanctify } from './index'
 
 const INPUT = [
   // put your alchemy here
@@ -8,7 +8,8 @@ const INPUT = [
 
 class Playground extends HTMLElement {
   connectedCallback () {
-    this.innerHTML = alchemize(INPUT)
+    this.innerHTML = alchemize(['div', INPUT])
+    this.innerHTML += sanctify('div', alchemize(INPUT))
   }
 }
 
