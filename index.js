@@ -1,4 +1,23 @@
-import { SELF_CLOSING_TAGS, UNCLOSED_TAGS } from './constants.js'
+const SELF_CLOSING_TAGS = [
+  'embed',
+  'img',
+  'input',
+  'keygen',
+  'link'
+]
+
+const UNCLOSED_TAGS = [
+  'area',
+  'base',
+  'br',
+  'col',
+  'hr',
+  'meta',
+  'param',
+  'source',
+  'track',
+  'wbr'
+]
 
 function makeTag (tag, body, props) {
   const prefixParts = [tag]

@@ -2,8 +2,152 @@
 import { alchemize, sanctify } from './index.js'
 import * as fc from 'fast-check'
 import { HtmlValidate, formatterFactory } from 'html-validate'
-import { HTML_TAGS } from './constants.js'
 import * as assert from 'assert/strict'
+
+// an incomplete list of valid html tags.
+// you can help by expanding it
+const HTML_TAGS = [
+  'a',
+  'abbr',
+  'address',
+  'annotation-xml',
+  'area',
+  'article',
+  'aside',
+  'audio',
+  'b',
+  'base',
+  'bdi',
+  'bdo',
+  // "bgsound", // deprecated
+  // "big", // deprecated
+  // "blink", // deprecated, thank god
+  'blockquote',
+  'body',
+  'br',
+  'button',
+  'canvas',
+  'caption',
+  // 'center', // deprecated
+  'cite',
+  'code',
+  'col',
+  'colgroup',
+  'data',
+  'datalist',
+  'dd',
+  'del',
+  'details',
+  'dfn',
+  'dialog',
+  // 'dir', // deprecated
+  'div',
+  'dl',
+  'dt',
+  'em',
+  'embed',
+  'fieldset',
+  'figcaption',
+  'figure',
+  // 'font', // deprecated
+  'font-face',
+  'font-face-format',
+  'font-face-name',
+  'font-face-src',
+  'font-face-uri',
+  'footer',
+  'form',
+  // 'frame', // deprecated
+  // 'frameset', // deprecated
+  'h1',
+  'h2',
+  'h3',
+  'h4',
+  'h5',
+  'h6',
+  'head',
+  'header',
+  'hr',
+  'html',
+  'i',
+  'iframe',
+  'img',
+  'input',
+  'ins',
+  'kbd',
+  // 'keygen', // deprecated
+  'label',
+  'legend',
+  'li',
+  'link',
+  'main',
+  'map',
+  'mark',
+  // 'marquee', // deprecated, unfortunately
+  'math',
+  'menu',
+  'meta',
+  'meter',
+  'missing-glyph',
+  'nav',
+  // 'nobr', // deprecated
+  // 'noembed', // deprecated
+  // 'noframes', // deprecated
+  'noscript',
+  'object',
+  'ol',
+  'optgroup',
+  'option',
+  'output',
+  'p',
+  'param',
+  'picture',
+  // 'plaintext', // deprecated
+  'pre',
+  'progress',
+  'q',
+  'rb',
+  'rp',
+  'rt',
+  'rtc',
+  'ruby',
+  's',
+  'samp',
+  'script',
+  'section',
+  'select',
+  'slot',
+  'small',
+  'source',
+  // 'spacer', // deprecated
+  'span',
+  // 'strike', // deprecated
+  'strong',
+  'style',
+  'sub',
+  'summary',
+  'sup',
+  'svg',
+  'table',
+  'tbody',
+  'td',
+  'template',
+  'textarea',
+  'tfoot',
+  'th',
+  'thead',
+  'time',
+  'title',
+  'tr',
+  'track',
+  // 'tt', // deprecated
+  'u',
+  'ul',
+  'var',
+  'video',
+  'wbr'
+  // 'xmp' // deprecated
+]
 
 // some tags are hard to test so lol don't
 const WEIRD_TAGS = [
@@ -47,12 +191,12 @@ const WEIRD_TAGS = [
   'th',
   'title'
 ]
+
 const TEST_HTML_TAGS = HTML_TAGS.filter(s => !WEIRD_TAGS.includes(s))
-// validator
-const validator = new HtmlValidate({
-  extends: ['html-validate:recommended']
-})
+
+const validator = new HtmlValidate({ extends: ['html-validate:recommended'] })
 const textFormatResult = formatterFactory('text')
+
 const htmlTagGen = () => fc.constantFrom(...TEST_HTML_TAGS)
 const contentGen = () => fc.stringMatching(/^[^&"<>]+$/)
 const attrGen = () => fc.stringMatching(/^[a-z-]+$/)
