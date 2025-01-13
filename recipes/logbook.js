@@ -210,13 +210,15 @@ class LogEntry extends HTMLElement {
         }
         listento(textsaveid, 'click', async (e) => {
           e.preventDefault()
-          text = snag(textinputid).value
+          const textinput = snag(textinputid)
+          text = textinput.value
           if (!id && !rev) {
             await saveEntry(text)
           } else {
             const entry = { _id: id, _rev: rev, text, createdAt }
             await forcePut(entry)
           }
+          textinput.value = ''
         })
       } else {
         this.innerHTML = alchemize(showEntry(entry, { editbuttonid, deletebuttonid }))
