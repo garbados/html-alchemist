@@ -222,7 +222,10 @@ class App extends HTMLElement {
         ['div.block',
           ['h1.title', 'Alchemical Todo'],
           ['p.subtitle', 'Efficient Reminders'],
-          ['p', ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/todo.js' }, 'Source']]
+          ['p',
+            ['a', { href: '../index.html' }, 'Back'],
+            ' | ',
+            ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/todo.js' }, 'Source']]
         ],
         ['div.block', ['todo-list', '']]
       ]

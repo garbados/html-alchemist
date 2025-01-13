@@ -16,12 +16,7 @@ const DDOC = {
     byCreatedAt: {
       map: function (doc) {
         if (doc._id.match(/^log-entry\/.+$/)) {
-          const date = new Date(doc.createdAt)
-          emit([
-            date.getFullYear(), date.getMonth() + 1, date.getDate(),
-            date.getHours(), date.getMinutes(), date.getSeconds(),
-            date.getMilliseconds(), doc.createdAt
-          ])
+          emit(doc.createdAt)
         }
       }.toString()
     },
@@ -275,7 +270,10 @@ class App extends HTMLElement {
           'div.block',
           ['h1.title', 'Alchemical Logbook'],
           ['p.subtitle', 'Markdown Notes'],
-          ['p', ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/logbook.js' }, 'Source']]
+          ['p',
+            ['a', { href: '../index.html' }, 'Back'],
+            ' | ',
+            ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/logbook.js' }, 'Source']]
         ],
         ['my-logbook', '']
       ]
