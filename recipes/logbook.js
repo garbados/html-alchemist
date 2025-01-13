@@ -244,7 +244,6 @@ class Logbook extends HTMLElement {
     const listid = uuid()
     const filterid = uuid()
     let entries = await getDocsByTime()
-    console.log(entries)
     this.innerHTML = alchemize([
       ['div.block', ['log-entry', '']],
       ['div.block', entryFilter(filterid)],
@@ -259,8 +258,7 @@ class Logbook extends HTMLElement {
       refresh()
     })
     db.changes({ since: 'now', live: true, ...INCLUDE_DOCS })
-      .on('change', async (change) => {
-        console.log(change.doc)
+      .on('change', async () => {
         entries = await getDocsByTime()
         refresh()
       })
