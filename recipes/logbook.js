@@ -274,7 +274,8 @@ class App extends HTMLElement {
         [
           'div.block',
           ['h1.title', 'Alchemical Logbook'],
-          ['p.subtitle', 'Markdown Notes']
+          ['p.subtitle', 'Markdown Notes'],
+          ['p', ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/logbook.js' }, 'Source']]
         ],
         ['my-logbook', '']
       ]

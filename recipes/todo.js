@@ -185,13 +185,11 @@ class TodoItem extends HTMLElement {
 
 class TodoList extends HTMLElement {
   async connectedCallback () {
-    this.innerHTML = alchemize(['p.subtitle', 'Loading...'])
     const newentryid = uuid()
     const filterid = uuid()
     const todoid = uuid()
     let todos = await allDocsByText()
     this.innerHTML = alchemize([
-      ['p.subtitle', 'Efficient Reminders'],
       [`div.block#${newentryid}`, ['todo-item', '']],
       ['div.block', todoFilter(filterid)],
       [`div.block#${todoid}`, todoList(todos)]
@@ -221,7 +219,11 @@ class App extends HTMLElement {
       'section.section',
       [
         'div.container',
-        ['div.block.is-primary', ['h1.title', 'Alchemical Todo']],
+        ['div.block',
+          ['h1.title', 'Alchemical Todo'],
+          ['p.subtitle', 'Efficient Reminders'],
+          ['p', ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/todo.js' }, 'Source']]
+        ],
         ['div.block', ['todo-list', '']]
       ]
     ])
