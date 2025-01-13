@@ -271,7 +271,7 @@ class App extends HTMLElement {
           ['h1.title', 'Alchemical Logbook'],
           ['p.subtitle', 'Markdown Notes'],
           ['p',
-            ['a', { href: '../index.html' }, 'Back'],
+            ['a', { href: './index.html' }, 'Back'],
             ' | ',
             ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/logbook.js' }, 'Source']]
         ],
