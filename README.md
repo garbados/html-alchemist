@@ -3,26 +3,26 @@
 [![Build and Test](https://github.com/garbados/html-alchemist/actions/workflows/test.yml/badge.svg)](https://github.com/garbados/html-alchemist/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/garbados/html-alchemist/badge.svg?branch=main)](https://coveralls.io/github/garbados/html-alchemist?branch=main)
 
-Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into strings of HTML. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small. About 1 kilobyte, minified, before compression.
+Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into strings of HTML. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small. About 3 kb, unminified, uncompressed.
 
 Example:
 
 ```js
 alchemize([
-    'section.section',
-    ['h1', 'Calendar of the Witchmothers'],
-    ['hr', ''],
-    ['ul',
-        ['li', explainSeason(witchy)],
-        ['li', explainPhase(witchy)],
-        ['li', explainMonth(witchy)],
-        ['li', explainTime(witchy)]
-    ],
-    holidays
-        ? [['h2', 'Holidays'],
-            ['hr', ''],
-            ['ul', holidays.map(h => ['li', h])]]
-        : ''
+  'section.section',
+  ['h1', 'Calendar of the Witchmothers'],
+  ['hr', ''],
+  ['ul',
+      ['li', explainSeason(witchy)],
+      ['li', explainPhase(witchy)],
+      ['li', explainMonth(witchy)],
+      ['li', explainTime(witchy)]
+  ],
+  holidays
+      ? [['h2', 'Holidays'],
+          ['hr', ''],
+          ['ul', holidays.map(h => ['li', h])]]
+      : ''
 ])
 /*
 <section class="section">
@@ -53,7 +53,7 @@ class YourElement extends HTMLElement {
 ```
 
 Alchemist supplies an HTML encoding function
-for alchemizing unsafe inputs, named `sanctify`.
+for alchemizing untrusted inputs, named `sanctify`.
 Be sure to use it when you need it!
 
 ```js
@@ -65,6 +65,8 @@ this.innerHTML = alchemize(['div', userInput])
 this.innerHTML = sanctify('div', userInput)
 // <div>&lt;h1&gt;hello world&lt;/h1&gt;</div>
 ```
+
+There are several example apps you can check out on [the website](https://garbados.github.io/html-alchemist), including todo and diary apps. You may find the [playground](https://garbados.github.io/html-alchemist/playground) especially good for experimentation.
 
 ## Install
 
@@ -203,6 +205,13 @@ Sanctify relies on the `document` object in a browser's context,
 so using it outside of the browser will require passing your own `document`,
 such as with [jsdom](https://github.com/jsdom/jsdom).
 
+### Convenience
+
+Not to play code golf about it, but sometimes I like typing fewer characters. Alchemist also exports these functions:
+
+- `snag(elemId)`: equivalent to `document.getElementById(elemId)`
+- `listento(elemId, eventName, callback)`: equivalent to `snag(elemId).addEventListener(eventName, callback)`
+
 ## Development
 
 Run the test suite:
@@ -222,10 +231,10 @@ Or, to mess around rendering arbitrary HTML...
 ```bash
 # run the playground server
 npm run dev
-# edit playground.js
-vi playground.js
-# now visit http://localhost:3000
-# it will update whenever index.js or playground.js change
+# edit a recipe
+emacs recipes/playground.js
+# now visit http://localhost:3000/playground
+# it will update whenever any recipes change
 ```
 
 You can also run `npm run minsize` to stat a minified version of the source script:
@@ -234,7 +243,7 @@ You can also run `npm run minsize` to stat a minified version of the source scri
 npm run minsize
 
   File: index.min.js
-  Size: 1309            Blocks: 8          IO Block: 4096   regular file
+  Size: 1484            Blocks: 8          IO Block: 4096   regular file
   ...
 ```
 

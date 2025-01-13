@@ -84,7 +84,7 @@ try {
   console.warn(`[html-alchemist] Could not find \`document\`: ${e.message}`)
 }
 
-export function sanctify (tagName, unsafeString, document = mydocument) {
+export const sanctify = (tagName, unsafeString, document = mydocument) => {
   if (!document) throw new Error('Missing document context. If you are not in a browser, you must pass a `document` parameter.')
   // create an enclosing node
   const enclosing = document.createElement(tagName)
@@ -95,3 +95,10 @@ export function sanctify (tagName, unsafeString, document = mydocument) {
   // return the outer HTML, which includes the enclosing tag
   return enclosing.outerHTML
 }
+
+// util
+export const snag = (elemId, document = mydocument) =>
+  document.getElementById(elemId)
+
+export const listento = (elemId, eventName, callback, document = mydocument) =>
+  snag(elemId, document).addEventListener(eventName, callback)

@@ -1,4 +1,4 @@
-www
+www/*.js
 node_modules
 coverage
 index.min.js

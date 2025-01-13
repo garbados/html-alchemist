@@ -1,5 +1,5 @@
 /* global describe, it */
-import { alchemize, sanctify } from './index.js'
+import { alchemize, sanctify, listento, snag } from './index.js'
 import * as fc from 'fast-check'
 import { HtmlValidate, formatterFactory } from 'html-validate'
 import * as assert from 'assert/strict'
@@ -312,5 +312,23 @@ describe('html-alchemist', function () {
     const expected = `<p>${sanitizeHtml(unsafeInput)}</p>`
     const actual = sanctify('p', unsafeInput, fakedocument)
     assert.strictEqual(expected, actual, `Mismatch: ${actual} actual; expected: ${expected}`)
+  })
+
+  it('has some util functions', async function () {
+    // i don't play (code) golf, i only play (coverage) putt
+    const document = {
+      getElementById () {
+        return {
+          addEventListener (eventName, callback) {
+            callback(eventName)
+          }
+        }
+      }
+    }
+    assert.ok(snag('???', document))
+    const eventName = await new Promise((resolve) => {
+      listento('???', '?!?!?!?!', resolve, document)
+    })
+    assert.strictEqual('?!?!?!?!', eventName)
   })
 })
