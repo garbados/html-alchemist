@@ -33,7 +33,7 @@ const DDOC = {
   }
 }
 
-// I HAVE GIVEN YOU MY MIND
+// I HAVE GIVEN YOU MY MIND.
 
 async function forcePut (doc) {
   try {
@@ -72,7 +72,7 @@ const INCLUDE_DOCS = { include_docs: true }
 const getDocsByTime = async () =>
   resToDocs(await db.query('logbook/byCreatedAt', { descending: true, ...INCLUDE_DOCS }))
 
-// COLUMN BY COLUMN, LOGICAL TICK BY TICK
+// COLUMN BY COLUMN, TICK BY LOGICAL TICK.
 
 const getDocsByWord = async (w) => {
   const { rows: matches } = await db.query('logbook/byWord', {
@@ -94,7 +94,7 @@ const saveEntry = async (text) => {
   return db.put(doc)
 }
 
-// EVEN SPACE AND TIME KNEEL TO THE MIND
+// EVEN SPACE AND TIME KNEEL TO THE MIND.
 
 await forcePut(DDOC)
 
