@@ -4,27 +4,63 @@
         <meta charset="utf-8">
         <meta name="viewport" content="width=device-width, initial-scale=1">
         <title>Alchemist</title>
-        <link rel="stylesheet" href="//cdn.jsdelivr.net/npm/bulma@1.0.2/css/bulma.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@picocss/pico@2/css/pico.min.css">
+        <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/themes/prism-tomorrow.min.css">
+        <script src="https://cdn.jsdelivr.net/npm/pouchdb@9.0.0/dist/pouchdb.min.js"></script>
+        <script src="https://cdn.jsdelivr.net/npm/prismjs@1.29.0/prism.min.js"></script>
+        <script type="module" src="./counter.js"></script>
+        <script type="module" src="./todo.js"></script>
+        <script type="module" src="./playground.js"></script>
+        <script type="module" src="./logbook.js"></script>
     </head>
     <body>
-      <section class="section">
-        <div class="container">
-          <div class="block">
-            <h1 class="title">Alchemist [html-alchemist]</h1>
-            <p class="subtitle">Dangerously efficient HTML templating, in under 3 KB.</p>
-          </div>
-          <div class="block">
-            <div class="content">
-              <p>Runs anywhere JS does. Friends with WebComponents. See the <a href="https://github.com/garbados/html-alchemist?tab=readme-ov-file#alchemist-html-alchemist">README</a> for more information.</p>
-              <ul>
-                <li><a href="https://github.com/garbados/html-alchemist">Source & Docs</a></li>
-                <li><a href="./playground.html">Playground</a></li>
-                <li><a href="./todo.html">Todo App</a></li>
-                <li><a href="./logbook.html">Logbook App</a></li>
-              </ul>
-            </div>
-          </div>
+      <header></header>
+      <main class="container">
+        <hgroup>
+          <h1>Alchemist [html-alchemist]</h1>
+          <p>Dangerously efficient JS microframework, in under 1 KB.</p>
+        </hgroup>
+        <p>Turn concise <a href="https://reagent-project.github.io/">Reagent</a>-style HTML expressions into vibrant applications. Friends with WebComponents. See the <a href="https://github.com/garbados/html-alchemist?tab=readme-ov-file#alchemist-html-alchemist">README</a> for more information.</p>
+        <article>
+          <p>Consider the source for a simple counter:</p>
+          <pre><code class="language-javascript">import { alchemize, snag } from "./alchemist.js"
+
+function counterview () {
+  // no reactive state. you control when and what to re-render.
+  let i = 0
+  function onclick () {
+    // interact directly with the DOM. dispel the magic.
+    snag('counter').innerText = String(++i)
+  }
+  // stop writing end tags. set attributes tersely.
+  return alchemize(['button#counter', { onclick, style: 'width: 100%;' }, i])
+}
+
+// forget react. make your own elements with webcomponents.
+class CounterApp extends HTMLElement {
+  connectedCallback () {
+    this.appendChild(counterview())
+  }
+}
+
+customElements.define('counter-app', CounterApp)</code></pre>
+        </article>
+        <section>
+          <h2>Examples</h2>
+          <h4>A simple counter:</h4>
+          <counter-app></counter-app>
+          <p>Source: <a href="./counter.js">counter.js</a></p>
+          <h4>A todo list:</h4>
+          <todo-list></todo-list>
+          <p>Source: <a href="./todo.js">todo.js</a></p>
+          <h4>A searchable blog:</h4>
+          <logbook-app></logbook-app>
+          <p>Source: <a href="./logbook.js">logbook.js</a></p>
+          <h4>Playground / scratchpad:</h4>
+          <playground-app></playground-app>
+          <p>Source: <a href="./playground.js">playground.js</a></p>
         </div>
-      </section>
+      </main>
+      <footer></footer>
     </body>
 </html>

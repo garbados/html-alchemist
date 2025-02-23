@@ -1,7 +1,7 @@
 /* global HTMLElement, customElements, document, PouchDB, emit */
 
-import { alchemize, sanctify, listento, snag } from '../index.js'
-import { default as uuid } from 'https://www.unpkg.com/uuid@11.0.5/dist/esm-browser/v4.js' // eslint-disable-line
+import { alchemize, listento, snag } from './alchemist.js'
+import { default as uuid } from 'https://cdn.jsdelivr.net/npm/uuid@11.1.0/dist/esm-browser/v4.js' // eslint-disable-line
 
 /* DATABASE BUSINESS */
 
@@ -76,62 +76,43 @@ async function allDocsByWord (w) {
 // TEMPLATES
 
 const editTodoItem = (text, { textinputid, textsaveid, error }) => [
-  'form.form',
+  'form',
   [
-    'div.field.has-addons',
-    [
-      'div.control.is-expanded',
-      [`input.input#${textinputid}`, { type: 'text', value: text, placeholder: 'What needs doing?' }]
-    ],
-    [
-      'div.control',
-      [`button.input.is-primary#${textsaveid}`, 'Save']
-    ]
+    'fieldset',
+    { role: 'group' },
+    [`input#${textinputid}`, { type: 'text', value: text, placeholder: 'What needs doing?' }],
+    [`button#${textsaveid}`, 'Save']
   ],
-  error ? ['p.help.is-danger', error] : ''
+  error ? ['small', error] : ''
 ]
 
 const showTodoItem = (text, { texteditid, todocompleteid }) => [
-  'div.level',
+  'section.grid',
+  ['article', text],
   [
-    'div.level-left',
-    ['div.level-item', sanctify('p', text)]
-  ],
-  [
-    'div.level-right',
-    ['div.level-item', [`button.button.is-primary#${todocompleteid}`, 'Done']],
-    ['div.level-item', [`button.button.is-info#${texteditid}`, 'Edit']]
+    'div',
+    { role: 'group' },
+    [`button.secondary#${todocompleteid}`, 'Done'],
+    [`button.contrast#${texteditid}`, 'Edit']
   ]
 ]
 
 const todoFilter = (filterid) => [
-  'form.form',
-  [
-    'div.field',
-    [
-      'div.control.is-expanded',
-      [`input.input#${filterid}`, {
-        type: 'text',
-        placeholder: 'Filter...'
-      }]
-    ]
-  ]
+  'form',
+  [`input#${filterid}`, {
+    type: 'text',
+    placeholder: 'Filter...'
+  }]
 ]
 
-const todoList = (docs) => [
-  'ul',
-  docs.map(({ text, _id, _rev }) => [
-    'li.block',
-    [
-      'todo-item',
-      {
-        'todo-text': text,
-        'todo-id': _id,
-        'todo-rev': _rev
-      }
-    ]
-  ])
-]
+const todoList = (docs) => docs.map(({ text, _id, _rev }) => [
+  'todo-item',
+  {
+    'todo-text': text,
+    'todo-id': _id,
+    'todo-rev': _rev
+  }
+])
 
 // ELEMENTS
 
@@ -148,7 +129,7 @@ class TodoItem extends HTMLElement {
     const todocompleteid = uuid()
     const refresh = () => {
       if (editing) {
-        this.innerHTML = alchemize(editTodoItem(text, { textinputid, textsaveid, error }))
+        this.replaceChildren(alchemize(editTodoItem(text, { textinputid, textsaveid, error })))
         listento(textsaveid, 'click', async (event) => {
           event.preventDefault()
           const oldText = text
@@ -168,7 +149,7 @@ class TodoItem extends HTMLElement {
           refresh()
         })
       } else {
-        this.innerHTML = alchemize(showTodoItem(text, { texteditid, todocompleteid }))
+        this.replaceChildren(alchemize(showTodoItem(text, { texteditid, todocompleteid })))
         listento(todocompleteid, 'click', async () => {
           await forceRemove({ _id: id, _rev: rev })
         })
@@ -189,14 +170,14 @@ class TodoList extends HTMLElement {
     const filterid = uuid()
     const todoid = uuid()
     let todos = await allDocsByText()
-    this.innerHTML = alchemize([
-      [`div.block#${newentryid}`, ['todo-item', '']],
-      ['div.block', todoFilter(filterid)],
-      [`div.block#${todoid}`, todoList(todos)]
-    ])
+    this.replaceChildren(alchemize([
+      [`div#${newentryid}`, ['todo-item', '']],
+      ['div', todoFilter(filterid)],
+      [`div#${todoid}`, todoList(todos)]
+    ]))
     const refresh = () => {
-      snag(todoid).innerHTML = alchemize(todoList(todos))
-      snag(newentryid).innerHTML = alchemize(['todo-item', ''])
+      snag(newentryid).replaceChildren(alchemize(['todo-item', '']))
+      snag(todoid).replaceChildren(alchemize(todoList(todos)))
     }
     listento(filterid, 'input', async (event) => {
       event.preventDefault()
@@ -213,26 +194,5 @@ class TodoList extends HTMLElement {
   }
 }
 
-class App extends HTMLElement {
-  connectedCallback () {
-    this.innerHTML = alchemize([
-      'section.section',
-      [
-        'div.container',
-        ['div.block',
-          ['h1.title', 'Alchemical Todo'],
-          ['p.subtitle', 'Efficient Reminders'],
-          ['p',
-            ['a', { href: './index.html' }, 'Back'],
-            ' | ',
-            ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/todo.js' }, 'Source']]
-        ],
-        ['div.block', ['todo-list', '']]
-      ]
-    ])
-  }
-}
-
 customElements.define('todo-item', TodoItem)
 customElements.define('todo-list', TodoList)
-customElements.define('my-app', App)
