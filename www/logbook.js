@@ -1,8 +1,8 @@
 /* global HTMLElement, customElements, PouchDB, emit */
 
-import { alchemize, listento, snag } from '../index.js'
-import { default as uuid } from 'https://www.unpkg.com/uuid@11.0.5/dist/esm-browser/v4.js' // eslint-disable-line
-import { marked } from 'https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.js'
+import { alchemize, listento, profane, snag } from './alchemist.js'
+import { default as uuid } from 'https://cdn.jsdelivr.net/npm/uuid@11.1.0/dist/esm-browser/v4.js' // eslint-disable-line
+import { marked } from 'https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.min.js'
 
 /* DATABASE PRELUDE */
 
@@ -101,53 +101,31 @@ await forcePut(DDOC)
 /* TEMPLATES */
 
 const showEntry = ({ text, createdAt }, { editbuttonid, deletebuttonid }) => [
-  'div.box',
-  ['div.content', marked.parse(text)],
+  'section',
+  profane('article', marked.parse(text)),
   ['hr', ''],
-  ['div.level',
-    ['div.level-left',
-      ['div.level-item',
-        ['p', (new Date(createdAt)).toLocaleString()]
-      ]
-    ],
-    ['div.level-right',
-      ['div.level-item',
-        [`button.button.is-warning#${editbuttonid}`, 'Edit']
-      ],
-      ['div.level-item',
-        [`button.button.is-danger#${deletebuttonid}`, 'Delete']
-      ]
-    ]
+  ['div.grid',
+    ['p', (new Date(createdAt)).toLocaleString()],
+    [`button.secondary#${editbuttonid}`, 'Edit'],
+    [`button.contrast#${deletebuttonid}`, 'Delete']
   ]
 ]
 
 const editEntry = ({ text, _rev }, { textinputid, textsaveid, cancelid }) => [
-  'form.form.box',
+  'form',
   [
-    'div.field',
-    ['label.label', _rev ? 'Edit Entry' : 'Log Entry'],
+    'fieldset',
+    ['label',
+      _rev ? 'Edit Entry' : 'Log Entry',
+      [`textarea#${textinputid}`, { placeholder: 'What happened?' }, text],
+      ['small', 'Use Markdown!']
+    ],
     [
-      'div.control',
-      [`textarea.textarea#${textinputid}`, { placeholder: 'What happened?' }, text],
-      ['p.small', 'Use Markdown!']
+      'div.grid',
+      [`button#${textsaveid}`, 'Save'],
+      _rev ? [`button.outline.secondary#${cancelid}`, 'Cancel'] : ''
     ]
-  ],
-  [
-    'div.field',
-    [
-      'div.control',
-      [`button.input.is-primary#${textsaveid}`, 'Save']
-    ]
-  ],
-  _rev
-    ? [
-        'div.field',
-        [
-          'div.control',
-          [`button.input.is-light#${cancelid}`, 'Cancel']
-        ]
-      ]
-    : ''
+  ]
 ]
 
 const listEntries = (entries) => entries.map(entry => [
@@ -195,7 +173,7 @@ class LogEntry extends HTMLElement {
     const refresh = async () => {
       const entry = { _id: id, _rev: rev, text, createdAt }
       if (editing) {
-        this.innerHTML = alchemize(editEntry(entry, { textinputid, textsaveid, cancelid }))
+        this.replaceChildren(alchemize(editEntry(entry, { textinputid, textsaveid, cancelid })))
         if (id && rev) {
           listento(cancelid, 'click', (e) => {
             e.preventDefault()
@@ -216,7 +194,7 @@ class LogEntry extends HTMLElement {
           textinput.value = ''
         })
       } else {
-        this.innerHTML = alchemize(showEntry(entry, { editbuttonid, deletebuttonid }))
+        this.replaceChildren(alchemize(showEntry(entry, { editbuttonid, deletebuttonid })))
         listento(editbuttonid, 'click', (e) => {
           e.preventDefault()
           editing = true
@@ -233,19 +211,19 @@ class LogEntry extends HTMLElement {
   }
 }
 
-class Logbook extends HTMLElement {
+class LogbookApp extends HTMLElement {
   async connectedCallback () {
-    this.innerHTML = alchemize(['section.section', ['p.subtitle', 'Loading...']])
+    this.replaceChildren(alchemize(['section.section', ['p.subtitle', 'Loading...']]))
     const listid = uuid()
     const filterid = uuid()
     let entries = await getDocsByTime()
-    this.innerHTML = alchemize([
+    this.replaceChildren(alchemize([
       ['div.block', ['log-entry', '']],
       ['div.block', entryFilter(filterid)],
       [`div.block#${listid}`, entries.length ? listEntries(entries) : '']
-    ])
+    ]))
     const refresh = () => {
-      snag(listid).innerHTML = alchemize(listEntries(entries))
+      snag(listid).replaceChildren(alchemize(listEntries(entries)))
     }
     listento(filterid, 'input', async (event) => {
       event.preventDefault()
@@ -260,29 +238,7 @@ class Logbook extends HTMLElement {
   }
 }
 
-class App extends HTMLElement {
-  connectedCallback () {
-    this.innerHTML = alchemize([
-      'section.section',
-      [
-        'div.container',
-        [
-          'div.block',
-          ['h1.title', 'Alchemical Logbook'],
-          ['p.subtitle', 'Markdown Notes'],
-          ['p',
-            ['a', { href: './index.html' }, 'Back'],
-            ' | ',
-            ['a', { href: 'https://github.com/garbados/html-alchemist/blob/main/recipes/logbook.js' }, 'Source']]
-        ],
-        ['my-logbook', '']
-      ]
-    ])
-  }
-}
-
 /* POSTLUDE */
 
 customElements.define('log-entry', LogEntry)
-customElements.define('my-logbook', Logbook)
-customElements.define('my-app', App)
+customElements.define('logbook-app', LogbookApp)

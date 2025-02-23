@@ -32,7 +32,7 @@ jobs:
 
       - run: npm i
       
-      - run: npm run recipes
+      - run: npm run minify
 
       - name: Setup Pages
         uses: actions/configure-pages@v5

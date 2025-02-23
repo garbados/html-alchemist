@@ -1,8 +1,9 @@
 /* global describe, it */
-import { alchemize, sanctify, listento, snag } from './index.js'
+import { alchemize, listento, snag, profane } from './index.js'
 import * as fc from 'fast-check'
-import { HtmlValidate, formatterFactory } from 'html-validate'
 import * as assert from 'assert/strict'
+import { HtmlValidate, formatterFactory } from 'html-validate'
+import { JSDOM } from 'jsdom'
 
 // an incomplete list of valid html tags.
 // you can help by expanding it
@@ -199,7 +200,7 @@ const textFormatResult = formatterFactory('text')
 
 const htmlTagGen = () => fc.constantFrom(...TEST_HTML_TAGS)
 const contentGen = () => fc.stringMatching(/^[^&"<>]+$/)
-const attrGen = () => fc.stringMatching(/^[a-z-]+$/)
+const attrGen = () => fc.stringMatching(/^[a-z][a-z-]*$/)
 const attrsGen = () => fc.dictionary(attrGen(), attrGen())
 
 const { tree: alchemishProp } = fc.letrec((tie) => {
@@ -207,8 +208,10 @@ const { tree: alchemishProp } = fc.letrec((tie) => {
     tree: fc.oneof({ depthSize: 'small', withCrossShrink: true }, tie('leaf'), tie('node')),
     node: tie('leaf'),
     leaf: fc.oneof(
-      htmlTagGen(),
       fc.tuple(),
+      fc.tuple(
+        htmlTagGen()
+      ),
       fc.tuple(
         htmlTagGen(),
         contentGen()
@@ -222,41 +225,64 @@ const { tree: alchemishProp } = fc.letrec((tie) => {
   }
 })
 
+const { window } = new JSDOM('<!DOCTYPE html><html><head></head><body></body></html>')
+
 describe('html-alchemist', function () {
-  it('should produce valid html from every (tested) tag', function () {
-    const errors = TEST_HTML_TAGS.map((tag) => {
-      return validator.validateStringSync(alchemize([tag, '']))
-    }).filter((validation) => {
-      return !validation.valid
-    }).map((validation) => {
-      return textFormatResult(validation.results).split(/\n+/g)[0]
-    }).toSorted()
-    for (const error of errors) {
-      console.log(error)
-    }
-    assert.strictEqual(errors.length, 0)
-  })
-
-  it('should at least not error on every known tag', function () {
-    for (const tag of HTML_TAGS) {
-      // just don't error, ok?
-      alchemize([tag, ''])
-    }
-  })
-
-  it('handles classes and IDs', function () {
-    const a = alchemize(['div.foo', ''])
-    assert.strictEqual(a, '<div class="foo"></div>')
-    const b = alchemize(['div.foo#bar', ''])
-    assert.strictEqual(b, '<div id="bar" class="foo"></div>')
-  })
-
   it('should handle values that are functions', function () {
-    const a = alchemize(['div', () => 'hello'])
-    assert.strictEqual(a, '<div>hello</div>')
+    const a = alchemize(() => ['div', () => 'hello'], window.document, window.HTMLElement)
+    assert.strictEqual(a.outerHTML, '<div>hello</div>')
+  })
+
+  it('should handle some basic inputs', function () {
+    const potion = alchemize([
+      'section.container#main>div.content.box',
+      ['h1.title', 'hello world'],
+      ['p.subtitle', 'lead to gold']
+    ], window.document, window.HTMLElement)
+    assert.strictEqual(potion.localName, 'section')
+    assert.strictEqual(potion.id, 'main')
+    assert.strictEqual(potion.className, 'container')
+    assert.strictEqual(potion.children[0].localName, 'div')
+    assert.strictEqual(potion.children[0].id, '')
+    assert.strictEqual(potion.children[0].className, 'content box')
+    assert.strictEqual(potion.children[0].children[0].className, 'title')
+    assert.strictEqual(potion.children[0].children[0].id, '')
+    assert.strictEqual(potion.children[0].children[0].localName, 'h1')
+    assert.strictEqual(potion.children[0].children[0].innerHTML, 'hello world')
+    assert.strictEqual(potion.children[0].children[1].className, 'subtitle')
+    assert.strictEqual(potion.children[0].children[1].id, '')
+    assert.strictEqual(potion.children[0].children[1].localName, 'p')
+    assert.strictEqual(potion.children[0].children[1].innerHTML, 'lead to gold')
+  })
+
+  it('should handle being given actual html entities', function () {
+    const potion = alchemize(alchemize(['h1', 'hello world'], window.document, window.HTMLElement), window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<h1>hello world</h1>')
+  })
+
+  it('should handle being given numerical content', function () {
+    const potion = alchemize(['h1', 1], window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<h1>1</h1>')
+  })
+
+  it('should handle being given bare siblings', function () {
+    const potion = alchemize([['p', 'hello'], ['p', 'world']], window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<div><p>hello</p><p>world</p></div>')
+  })
+
+  it('should handle lists with falsy elements', function () {
+    const potion = alchemize(['ul', ['li', 'hello'], null], window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<ul><li>hello</li></ul>')
+  })
+
+  it('should set handlers OK', function () {
+    const potion = alchemize(['button', { onclick: () => {} }, 'hello world'], window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<button>hello world</button>')
+    assert.strict(typeof potion.onclick === 'function')
   })
 
   it('should handle arbitrary inputs', function () {
+    this.timeout(10 * 1000)
     fc.assert(
       fc.property(
         alchemishProp,
@@ -264,7 +290,8 @@ describe('html-alchemist', function () {
           if (Array.isArray(alchemish) && alchemish.length === 3) {
             delete alchemish[1].constructor // html-validate gets mad when an attr is named constructor
           }
-          const validation = validator.validateStringSync(alchemize(alchemish))
+          const potion = alchemize(alchemish, window.document, window.HTMLElement)
+          const validation = validator.validateStringSync(potion.outerHTML)
           if (!validation.valid) {
             console.log(textFormatResult(validation.results))
           }
@@ -277,46 +304,36 @@ describe('html-alchemist', function () {
   it('should error when it does not understand', function () {
     const expected = 'What?'
     try {
-      alchemize([{ foo: 'bar' }, ''])
+      alchemize([{ foo: 'bar' }, ''], window.document, window.HTMLElement)
       throw new Error('Nope.')
     } catch (e) {
-      assert.strictEqual(e.message.slice(0, expected.length), expected)
+      assert.strictEqual(e.message.slice(0, expected.length), expected, e.message)
     }
   })
 
-  it('should sanitize inputs when asked to', function () {
-    const children = []
-    const sanitizeHtml = (s) => {
-      return s.replace(/&/g, '&amp;')
-        .replace(/</g, '&lt;')
-        .replace(/>/g, '&gt;')
-        .replace(/"/g, '&quot;')
-        .replace(/'/g, '&#039;')
-    }
+  it('should profane inputs when asked to', function () {
     const fakedocument = {
-      createElement (tagName) {
+      createElement (localName) {
+        let html = `<${localName}></${localName}>`
         return {
-          appendChild (child) {
-            children.push(child)
-          },
           get outerHTML () {
-            return alchemize([tagName, children.join('')])
+            return html
+          },
+          setHTMLUnsafe (s) {
+            html = `<${localName}>${s}</${localName}>`
           }
         }
-      },
-      createTextNode (unsafeString) {
-        return sanitizeHtml(unsafeString)
       }
     }
     const unsafeInput = '<h1>hello world</h1>'
-    const expected = `<p>${sanitizeHtml(unsafeInput)}</p>`
-    const actual = sanctify('p', unsafeInput, fakedocument)
-    assert.strictEqual(expected, actual, `Mismatch: ${actual} actual; expected: ${expected}`)
+    const actual = profane('p', unsafeInput, fakedocument)
+    const expected = `<p>${unsafeInput}</p>`
+    assert.strictEqual(expected, actual.outerHTML, `Mismatch: ${actual.outerHTML} actual; expected: ${expected}`)
   })
 
   it('has some util functions', async function () {
     // i don't play (code) golf, i only play (coverage) putt
-    const document = {
+    const fakedocument = {
       getElementById () {
         return {
           addEventListener (eventName, callback) {
@@ -325,9 +342,9 @@ describe('html-alchemist', function () {
         }
       }
     }
-    assert.ok(snag('???', document))
+    assert.ok(snag('???', fakedocument))
     const eventName = await new Promise((resolve) => {
-      listento('???', '?!?!?!?!', resolve, document)
+      listento('???', '?!?!?!?!', resolve, fakedocument)
     })
     assert.strictEqual('?!?!?!?!', eventName)
   })

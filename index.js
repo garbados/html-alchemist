@@ -1,99 +1,77 @@
-const SELF_CLOSING_TAGS = [
-  'embed',
-  'img',
-  'input',
-  'keygen',
-  'link'
-]
-
-const UNCLOSED_TAGS = [
-  'area',
-  'base',
-  'br',
-  'col',
-  'hr',
-  'meta',
-  'param',
-  'source',
-  'track',
-  'wbr'
-]
-
-function makeTag (tag, body, props) {
-  const prefixParts = [tag]
-  for (const [prop, value] of Object.entries(props)) {
-    if ([null, false, undefined].includes(value)) continue
-    prefixParts.push(`${prop}="${value}"`)
-  }
-  const prefix = prefixParts.join(' ')
-  if (UNCLOSED_TAGS.includes(tag)) {
-    return `<${prefix}>`
-  } else if (SELF_CLOSING_TAGS.includes(tag)) {
-    return `<${prefix} />`
-  } else {
-    return `<${prefix}>${body}</${tag}>`
-  }
-}
-
-function tagFromExpr (expr) {
-  let [rawTag, maybeProps, ...rest] = expr
-  let props = {}
-  if (!Array.isArray(maybeProps) && typeof maybeProps === 'object') {
-    props = maybeProps
-  } else {
-    rest = [maybeProps, ...rest]
-  }
-  const [maybeTag, ...rawClasses] = rawTag.split('.')
-  if (rawClasses.length === 0) {
-    const [tag, id] = maybeTag.split('#')
-    return makeTag(tag, alchemize(rest), { id, ...props })
-  } else {
-    const tag = maybeTag
-    const classes = rawClasses.slice(0, -1)
-    const maybeID = rawClasses[rawClasses.length - 1]
-    const [finalClass, id] = maybeID.split('#')
-    classes.push(finalClass)
-    return makeTag(tag, alchemize(rest), { id, class: classes.join(' '), ...props })
-  }
-}
-
-export function alchemize (expr) {
-  if (!Array.isArray(expr) && typeof expr !== 'object') {
-    if (typeof expr === 'function') {
-      return expr()
-    } else {
-      return expr
-    }
-  } else if (expr.length === 0) {
-    return ''
-  } else if (expr.length === 1) {
-    return alchemize(expr[0])
-  } else if (typeof expr[0] === 'string') {
-    return tagFromExpr(expr)
-  } else if (expr.length >= 2) {
-    return expr.map(alchemize).join('')
-  } else {
-    throw new Error(`What? ${expr}`)
-  }
-}
-
-let mydocument
+/* global document HTMLElement */
+let mydocument, myElement
 try {
   mydocument = document
-} catch (e) {
-  console.warn(`[html-alchemist] Could not find \`document\`: ${e.message}`)
+  myElement = HTMLElement
+} catch (_) {}
+
+const isStr = s => typeof s === 'string'
+const isFn = f => typeof f === 'function'
+const isNum = n => typeof n === 'number'
+const nullish = x => [null, undefined, false].includes(x)
+
+function elemFromExpr (expr, document = mydocument, HTMLElement = myElement) {
+  let [rawtag, props, ...children] = expr
+  const [subtag, ...subtags] = rawtag.split('>')
+  const [idtag, id] = subtag.split('#')
+  const [tag, ...classes] = idtag.split('.')
+  if (isStr(props) || Array.isArray(props) || props instanceof HTMLElement || isFn(props) || isNum(props) || nullish(props)) {
+    children = [props, ...children]
+    props = {}
+  }
+  const rootelem = document.createElement(tag)
+  let elem = rootelem
+  if (id) elem.setAttribute('id', id)
+  if (classes.length) elem.setAttribute('class', classes.join(' '))
+  for (const subtag of subtags) {
+    const subelem = elemFromExpr([subtag], document, HTMLElement)
+    elem.appendChild(subelem)
+    elem = subelem
+  }
+  Object.entries(props || {}).forEach(([k, v]) => { k.startsWith('on') ? elem[k] = v : elem.setAttribute(k, v) })
+  for (const body of children) {
+    if (nullish(body)) continue
+    const node = alchemize(body, document, HTMLElement)
+    elem.appendChild(node)
+  }
+  return rootelem
 }
 
-export const sanctify = (tagName, unsafeString, document = mydocument) => {
-  if (!document) throw new Error('Missing document context. If you are not in a browser, you must pass a `document` parameter.')
-  // create an enclosing node
-  const enclosing = document.createElement(tagName)
-  // create a text node to contain our unsafe input
-  const escaped = document.createTextNode(unsafeString)
-  // put one in the other
-  enclosing.appendChild(escaped)
-  // return the outer HTML, which includes the enclosing tag
-  return enclosing.outerHTML
+export function alchemize (expr, document = mydocument, HTMLElement = myElement) {
+  if (!Array.isArray(expr)) {
+    if (expr instanceof HTMLElement) {
+      return expr
+    } else if (isFn(expr)) {
+      return alchemize(expr(), document, HTMLElement)
+    } else if (isStr(expr)) {
+      return document.createTextNode(expr)
+    } else if (isNum(expr)) {
+      return document.createTextNode(String(expr))
+    } else {
+      throw new Error(`What? ${expr}`)
+    }
+  } else {
+    if (expr.length === 0) {
+      return document.createElement('span')
+    } else {
+      if (isStr(expr[0])) {
+        return elemFromExpr(expr, document, HTMLElement)
+      } else {
+        const div = document.createElement('div')
+        for (const elem of expr.map((x) => alchemize(x, document, HTMLElement))) {
+          div.appendChild(elem)
+        }
+        return div
+      }
+    }
+  }
+}
+
+// insert unescaped text content
+export const profane = (tagName, safeString, document = mydocument) => {
+  const elem = document.createElement(tagName)
+  elem.setHTMLUnsafe(safeString)
+  return elem
 }
 
 // util

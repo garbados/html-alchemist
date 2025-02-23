@@ -1,4 +1,4 @@
-www/*.js
 node_modules
 coverage
 index.min.js
+www/alchemist.js
