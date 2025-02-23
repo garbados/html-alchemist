@@ -4,7 +4,7 @@
 [![Build and Test](https://github.com/garbados/html-alchemist/actions/workflows/test.yml/badge.svg)](https://github.com/garbados/html-alchemist/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/garbados/html-alchemist/badge.svg?branch=main)](https://coveralls.io/github/garbados/html-alchemist?branch=main)
 
-Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into HTML entities. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small. About 1.0kB, once minified and gzipped. Its closest cousin is [VanJS](https://vanjs.org/).
+Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into HTML entities. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small, about 80 lines. Its closest cousin is [VanJS](https://vanjs.org/).
 
 Example:
 

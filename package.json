@@ -1,6 +1,6 @@
 {
   "name": "html-alchemist",
-  "version": "2.0.0",
+  "version": "2.0.1",
   "description": "Reagent-style HTML templating, for use with WebComponents.",
   "type": "module",
   "main": "index.js",

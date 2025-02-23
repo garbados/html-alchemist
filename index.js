@@ -15,6 +15,7 @@ function elemFromExpr (expr, document = mydocument, HTMLElement = myElement) {
   const [subtag, ...subtags] = rawtag.split('>')
   const [idtag, id] = subtag.split('#')
   const [tag, ...classes] = idtag.split('.')
+  // it's so hard to say "hey are you a bare object or what"
   if (isStr(props) || Array.isArray(props) || props instanceof HTMLElement || isFn(props) || isNum(props) || nullish(props)) {
     children = [props, ...children]
     props = {}
