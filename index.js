@@ -48,6 +48,8 @@ export function alchemize (expr, document = mydocument, HTMLElement = myElement)
       return document.createTextNode(expr)
     } else if (isNum(expr)) {
       return document.createTextNode(String(expr))
+    } else if (nullish(expr)) {
+      return document.createElement('span')
     } else {
       throw new Error(`What? ${expr}`)
     }

@@ -208,6 +208,7 @@ const { tree: alchemishProp } = fc.letrec((tie) => {
     tree: fc.oneof({ depthSize: 'small', withCrossShrink: true }, tie('leaf'), tie('node')),
     node: tie('leaf'),
     leaf: fc.oneof(
+      fc.constantFrom(null, false, undefined),
       fc.tuple(),
       fc.tuple(
         htmlTagGen()
