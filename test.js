@@ -1,5 +1,5 @@
 /* global describe, it */
-import { alchemize, listento, snag, profane } from './index.js'
+import { alchemize, listento, snag, profane, refresh } from './index.js'
 import * as fc from 'fast-check'
 import * as assert from 'assert/strict'
 import { HtmlValidate, formatterFactory } from 'html-validate'
@@ -340,21 +340,39 @@ describe('html-alchemist', function () {
     assert.strictEqual(expected, actual.outerHTML, `Mismatch: ${actual.outerHTML} actual; expected: ${expected}`)
   })
 
-  it('has some util functions', async function () {
-    // i don't play (code) golf, i only play (coverage) putt
+  describe('utils', function () {
     const fakedocument = {
+      createTextNode (x) {
+        return x
+      },
       getElementById () {
         return {
           addEventListener (eventName, callback) {
             callback(eventName)
+          },
+          replaceChildren (potion) {
+            return potion
           }
         }
       }
     }
-    assert.ok(snag('???', fakedocument))
-    const eventName = await new Promise((resolve) => {
-      listento('???', '?!?!?!?!', resolve, fakedocument)
+
+    it('snag', function () {
+      assert.ok(snag('???', fakedocument))
     })
-    assert.strictEqual('?!?!?!?!', eventName)
+
+    it('listento', async function () {
+      const id = '???'
+      const text = '?!?!?!?!'
+      const eventName = await new Promise((resolve) => {
+        listento(id, text, resolve, fakedocument)
+      })
+      assert.strictEqual(text, eventName)
+    })
+
+    it('refresh', function () {
+      const text = 'aaa'
+      assert.strictEqual(text, refresh('???', () => text, fakedocument, window.HTMLElement))
+    })
   })
 })

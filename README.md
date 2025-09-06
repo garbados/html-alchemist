@@ -216,8 +216,15 @@ profane('p', userBlogPost)
 
 Sometimes I like typing fewer characters. Alchemist also exports these functions:
 
-- `snag(elemId)`: equivalent to `document.getElementById(elemId)`
-- `listento(elemId, eventName, callback)`: equivalent to `snag(elemId).addEventListener(eventName, callback)`
+- `snag(elemId)`
+  - equivalent to  
+    `document.getElementById(elemId)`
+- `listento(elemId, eventName, callback)`
+  - equivalent to  
+    `snag(elemId).addEventListener(eventName, callback)`
+- `refresh(elemId, fn)`
+  - equivalent to  
+    `snag(elemId).replaceChildren(alchemize(fn()))`
 
 ## Development
 
