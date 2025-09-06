@@ -1,7 +1,6 @@
 /* global emit */
 
 /* DATABASE PRELUDE */
-//////////////////////
 // OH LORDS OF DATA
 // I HAVE GIVEN YOU MY SPIRIT.
 // DO YOU HEAR MY THOUGHTS
