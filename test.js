@@ -371,8 +371,8 @@ describe('html-alchemist', function () {
     })
 
     it('refresh', function () {
-      const text = 'aaa'
-      assert.strictEqual(text, refresh('???', () => text, fakedocument, window.HTMLElement))
+      const expr = 'aaa'
+      assert.strictEqual(expr, refresh('???', () => expr, fakedocument, window.HTMLElement))
     })
   })
 })

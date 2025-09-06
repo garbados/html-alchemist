@@ -222,9 +222,9 @@ Sometimes I like typing fewer characters. Alchemist also exports these functions
 - `listento(elemId, eventName, callback)`
   - equivalent to  
     `snag(elemId).addEventListener(eventName, callback)`
-- `refresh(elemId, fn)`
+- `refresh(elemId, expr)`
   - equivalent to  
-    `snag(elemId).replaceChildren(alchemize(fn()))`
+    `snag(elemId).replaceChildren(alchemize(expr))`
 
 ## Development
 

@@ -99,5 +99,5 @@ export const snag = (elemId, document = mydocument) =>
 export const listento = (elemId, eventName, callback, document = mydocument) =>
   snag(elemId, document).addEventListener(eventName, callback)
 
-export const refresh = (elemId, fn, document = mydocument, HTMLElement = myElement) =>
-  snag(elemId, document).replaceChildren(alchemize(fn(), document, HTMLElement))
+export const refresh = (elemId, expr, document = mydocument, HTMLElement = myElement) =>
+  snag(elemId, document).replaceChildren(alchemize(expr, document, HTMLElement))
