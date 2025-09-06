@@ -225,6 +225,7 @@ Sometimes I like typing fewer characters. Alchemist also exports these functions
 - `refresh(elemId, expr)`
   - equivalent to  
     `snag(elemId).replaceChildren(alchemize(expr))`
+  - ...but you can also pass an HTML element as `elemId` directly!
 
 ## Development
 
