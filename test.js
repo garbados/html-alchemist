@@ -271,6 +271,11 @@ describe('html-alchemist', function () {
     assert.strictEqual(potion.outerHTML, '<div><p>hello</p><p>world</p></div>')
   })
 
+  it('should handle being given bare sub-children', function () {
+    const potion = alchemize(['div', [['p', 'hello'], ['p', 'world']]], window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<div><p>hello</p><p>world</p></div>')
+  })
+
   it('should handle lists with falsy elements', function () {
     const potion = alchemize(['ul', ['li', 'hello'], null], window.document, window.HTMLElement)
     assert.strictEqual(potion.outerHTML, '<ul><li>hello</li></ul>')
@@ -303,12 +308,13 @@ describe('html-alchemist', function () {
   })
 
   it('should error when it does not understand', function () {
-    const expected = 'What?'
+    const input = { foo: 'bar' }
+    const expected = `What? ${JSON.stringify(input)}`
     try {
-      alchemize([{ foo: 'bar' }, ''], window.document, window.HTMLElement)
+      alchemize([input, ''], window.document, window.HTMLElement)
       throw new Error('Nope.')
     } catch (e) {
-      assert.strictEqual(e.message.slice(0, expected.length), expected, e.message)
+      assert.strictEqual(e.message, expected, e.message)
     }
   })
 

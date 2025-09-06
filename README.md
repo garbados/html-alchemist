@@ -4,7 +4,7 @@
 [![Build and Test](https://github.com/garbados/html-alchemist/actions/workflows/test.yml/badge.svg)](https://github.com/garbados/html-alchemist/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/garbados/html-alchemist/badge.svg?branch=main)](https://coveralls.io/github/garbados/html-alchemist?branch=main)
 
-Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into HTML entities. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small, about 80 lines. Its closest cousin is [VanJS](https://vanjs.org/).
+Based on [Reagent](https://reagent-project.github.io/), Alchemist supplies an `alchemize` function that converts list expressions into HTML entities. It is designed to work alongside [WebComponents](https://developer.mozilla.org/en-US/docs/Web/API/Web_components), replacing your need for React and JSX in one fell swoop. It is very small, under 2kb when minified. Its closest cousin is [VanJS](https://vanjs.org/).
 
 Example:
 
@@ -186,14 +186,14 @@ alchemize([])
 Unlike Reagent, inputs do not strictly need to begin with an HTML tag name. Without an explicit tag name, `div` is used.
 
 ```js
-alchemize(['div.content', [['h1', 'have you heard the good word'], ['p', 'the word is "bird"']]])
-// <div class="content"><div><h1>have you heard the good word</h1><p>the word is "bird"</p></div></div>
+alchemize([['h1', 'have you heard the good word'], ['p', 'the word is "bird"']])
+// <div><h1>have you heard the good word</h1><p>the word is "bird"</p></div>
 ```
 
-You could also make them peers of the tag, without a list in the middle. It's up to you.
+When inner expressions are lists that don't begin with a tag name, the outer expression's tag name is used.
 
 ```js
-alchemize(['div.content', ['h1', 'have you heard the good word'], ['p', 'the word is "bird"']])
+alchemize(['div.content', [['h1', 'have you heard the good word'], ['p', 'the word is "bird"']]])
 // <div class="content"><h1>have you heard the good word</h1><p>the word is "bird"</p></div>
 ```
 
