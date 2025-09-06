@@ -1,5 +1,5 @@
 /* global HTMLElement, customElements */
-import { alchemize } from './alchemist.js'
+import { alchemize, refresh } from './alchemist.js'
 
 const renderOutput = (input) => {
   let json, error, result
@@ -28,13 +28,12 @@ const INPUT = ['h1', 'hello world']
 class PlaygroundApp extends HTMLElement {
   connectedCallback () {
     const oninput = (event) => {
-      document.getElementById('output').replaceChildren(alchemize(renderOutput(event.target.value)))
+      refresh('output', renderOutput(event.target.value))
     }
-    const view = alchemize([
+    refresh(this, [
       ['textarea', { rows: 10, col: 30, oninput }, JSON.stringify(INPUT)],
       ['div#output', renderOutput(INPUT)]
     ])
-    this.replaceChildren(view)
   }
 }
 

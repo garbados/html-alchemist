@@ -1,78 +1,31 @@
 /* global HTMLElement, customElements, PouchDB, emit */
 
-import { alchemize, listento, profane, snag } from './alchemist.js'
+import { forcePut, forceRemove, resToDocs, INCLUDE_DOCS, queryToDocs, wordsearch } from './db.js'
+import { profane, refresh, snag } from './alchemist.js'
 import { default as uuid } from 'https://cdn.jsdelivr.net/npm/uuid@11.1.0/dist/esm-browser/v4.js' // eslint-disable-line
 import { marked } from 'https://cdn.jsdelivr.net/npm/marked/lib/marked.esm.min.js'
 
-/* DATABASE PRELUDE */
-
 const db = new PouchDB('alchemist-logbook')
-
-// OH LORDS OF DATA
+const idprefix = 'log-entry'
 
 const DDOC = {
   _id: '_design/logbook',
   views: {
     byCreatedAt: {
       map: function (doc) {
-        if (doc._id.match(/^log-entry\/.+$/)) {
+        if (doc._id.match(/^%s\/.+$/)) {
           emit(doc.createdAt)
         }
-      }.toString()
+      }.toString().replace('%s', idprefix)
     },
-    // this is my favorite party trick
-    byWord: {
-      map: function (doc) {
-        if (doc._id.match(/^log-entry\/.+$/)) {
-          for (const word of doc.text.split(' ')) {
-            emit(word.toLowerCase())
-          }
-        }
-      }.toString()
-    }
+    byWord: { map: wordsearch(idprefix) }
   }
 }
 
-// I HAVE GIVEN YOU MY MIND.
+await forcePut(db, DDOC) // setup queries
 
-async function forcePut (doc) {
-  try {
-    return await db.put(doc)
-  } catch (e) {
-    if (e.status !== 409) throw e
-    const { _rev, ...oldDoc } = await db.get(doc._id)
-    if (JSON.stringify(oldDoc) !== JSON.stringify(doc)) {
-      return db.put({ ...doc, _rev })
-    }
-  }
-}
-
-// DO YOU HEAR MY THOUGHTS
-
-async function forceRemove (doc) {
-  try {
-    return await db.remove(doc)
-  } catch (e) {
-    if (e.status !== 409) throw e
-    const { _id, _rev } = await db.get(doc._id)
-    return db.remove({ _id, _rev })
-  }
-}
-
-// AS I HEAR THE SPIN OF YOUR DISKS?
-
-function resToDocs ({ rows }) {
-  return rows.map(({ doc }) => doc)
-}
-
-const INCLUDE_DOCS = { include_docs: true }
-
-// I OPEN MY EYES AND ETERNITY SPRAWLS
-
-const getDocsByTime = async () =>
-  resToDocs(await db.query('logbook/byCreatedAt', { descending: true, ...INCLUDE_DOCS }))
-
-// COLUMN BY COLUMN, TICK BY LOGICAL TICK.
+const getDocsByTime = () =>
+  queryToDocs(db, 'logbook/byCreatedAt', { descending: true })
 
 const getDocsByWord = async (w) => {
   const { rows: matches } = await db.query('logbook/byWord', {
@@ -87,31 +40,25 @@ const getDocsByWord = async (w) => {
   return docs.sort((a, b) => a.createdAt < b.createdAt)
 }
 
-// IN YOUR REALM OF HERE AND THEN AND WHERE AND NEVER
-
 const saveEntry = async (text) => {
-  const doc = { text, _id: `log-entry/${uuid()}`, createdAt: Date.now() }
+  const doc = { text, _id: `${idprefix}/${uuid()}`, createdAt: Date.now() }
   return db.put(doc)
 }
 
-// EVEN SPACE AND TIME KNEEL TO THE MIND.
-
-await forcePut(DDOC)
-
 /* TEMPLATES */
 
-const showEntry = ({ text, createdAt }, { editbuttonid, deletebuttonid }) => [
+const showEntry = ({ text, createdAt }, { onedit, ondelete }) => [
   'section',
   profane('article', marked.parse(text)),
   ['hr', ''],
   ['div.grid',
     ['p', (new Date(createdAt)).toLocaleString()],
-    [`button.secondary#${editbuttonid}`, 'Edit'],
-    [`button.contrast#${deletebuttonid}`, 'Delete']
+    ['button.secondary', { onclick: onedit }, 'Edit'],
+    ['button.contrast', { onclick: ondelete }, 'Delete']
   ]
 ]
 
-const editEntry = ({ text, _rev }, { textinputid, textsaveid, cancelid }) => [
+const editEntry = ({ text, _rev }, { textinputid, onsave, oncancel }) => [
   'form',
   [
     'fieldset',
@@ -122,35 +69,36 @@ const editEntry = ({ text, _rev }, { textinputid, textsaveid, cancelid }) => [
     ],
     [
       'div.grid',
-      [`button#${textsaveid}`, 'Save'],
-      _rev ? [`button.outline.secondary#${cancelid}`, 'Cancel'] : ''
+      ['button', { onclick: onsave }, 'Save'],
+      _rev ? ['button.outline.secondary', { onclick: oncancel }, 'Cancel'] : ''
     ]
   ]
 ]
 
-const listEntries = (entries) => entries.map(entry => [
+const listEntries = (entries) => entries.map(({ _id, _rev, text, createdAt }) => [
   'div.block',
   [
     'log-entry',
     {
-      'log-_id': entry._id,
-      'log-_rev': entry._rev,
-      'log-text': entry.text,
-      'log-createdAt': entry.createdAt
+      'log-id': _id,
+      'log-rev': _rev,
+      'log-text': text,
+      'log-createdAt': createdAt
     }
   ]
 ])
 
-const entryFilter = (filterid) => [
+const entryFilter = ({ oninput }) => [
   'form.form.box',
   [
     'div.field',
     ['label.label', 'Filter entries by word:'],
     [
       'div.control',
-      [`input.input#${filterid}`, {
+      ['input.input', {
         type: 'text',
-        placeholder: 'Filter...'
+        placeholder: 'Filter...',
+        oninput
       }]
     ]
   ]
@@ -160,80 +108,84 @@ const entryFilter = (filterid) => [
 
 class LogEntry extends HTMLElement {
   async connectedCallback () {
-    const id = this.getAttribute('log-_id')
-    const rev = this.getAttribute('log-_rev') || null
+    // setup
+    const elem = this
+    const id = this.getAttribute('log-id')
+    const rev = this.getAttribute('log-rev') || null
     let text = this.getAttribute('log-text') || ''
     const createdAt = parseInt(this.getAttribute('log-createdAt'), 10) || Date.now()
     let editing = !rev
-    const cancelid = uuid()
-    const deletebuttonid = uuid()
-    const editbuttonid = uuid()
     const textinputid = uuid()
-    const textsaveid = uuid()
-    const refresh = async () => {
+    // on save
+    async function onsave (e) {
+      e.preventDefault()
+      const textinput = snag(textinputid)
+      text = textinput.value
+      if (!id && !rev) {
+        await saveEntry(text)
+      } else {
+        const entry = { _id: id, _rev: rev, text, createdAt }
+        await forcePut(db, entry)
+      }
+      textinput.value = ''
+    }
+    // on cancel
+    async function oncancel (e) {
+      e.preventDefault()
+      editing = false
+      refreshLogEntry()
+    }
+    // on edit
+    async function onedit (e) {
+      e.preventDefault()
+      editing = true
+      refreshLogEntry()
+    }
+    // on delete
+    async function ondelete (e) {
+      e.preventDefault()
+      const ok = window.confirm('Are you sure you want to delete this entry?')
+      if (ok) await forceRemove(db, { _id: id })
+    }
+    // refresh
+    async function refreshLogEntry () {
       const entry = { _id: id, _rev: rev, text, createdAt }
       if (editing) {
-        this.replaceChildren(alchemize(editEntry(entry, { textinputid, textsaveid, cancelid })))
-        if (id && rev) {
-          listento(cancelid, 'click', (e) => {
-            e.preventDefault()
-            editing = false
-            refresh()
-          })
-        }
-        listento(textsaveid, 'click', async (e) => {
-          e.preventDefault()
-          const textinput = snag(textinputid)
-          text = textinput.value
-          if (!id && !rev) {
-            await saveEntry(text)
-          } else {
-            const entry = { _id: id, _rev: rev, text, createdAt }
-            await forcePut(entry)
-          }
-          textinput.value = ''
-        })
+        refresh(elem, editEntry(entry, { textinputid, onsave, oncancel }))
       } else {
-        this.replaceChildren(alchemize(showEntry(entry, { editbuttonid, deletebuttonid })))
-        listento(editbuttonid, 'click', (e) => {
-          e.preventDefault()
-          editing = true
-          refresh()
-        })
-        listento(deletebuttonid, 'click', async (e) => {
-          e.preventDefault()
-          const ok = window.confirm('Are you sure you want to delete this entry?')
-          if (ok) await forceRemove({ _id: id })
-        })
+        refresh(elem, showEntry(entry, { onedit, ondelete }))
       }
     }
-    refresh()
+    // begin
+    refreshLogEntry()
   }
 }
 
 class LogbookApp extends HTMLElement {
   async connectedCallback () {
-    this.replaceChildren(alchemize(['section.section', ['p.subtitle', 'Loading...']]))
-    const listid = uuid()
-    const filterid = uuid()
+    // loading...
+    refresh(this, ['section.section', ['p.subtitle', 'Loading...']])
     let entries = await getDocsByTime()
-    this.replaceChildren(alchemize([
-      ['div.block', ['log-entry', '']],
-      ['div.block', entryFilter(filterid)],
-      [`div.block#${listid}`, entries.length ? listEntries(entries) : '']
-    ]))
-    const refresh = () => {
-      snag(listid).replaceChildren(alchemize(listEntries(entries)))
+    async function oninput (e) {
+      e.preventDefault()
+      entries = await getDocsByWord(e.target.value)
+      refreshEntries()
     }
-    listento(filterid, 'input', async (event) => {
-      event.preventDefault()
-      entries = await getDocsByWord(event.target.value)
-      refresh()
-    })
+    const listid = uuid()
+    function refreshEntries () {
+      refresh(listid, listEntries(entries))
+    }
+    // ...loaded!
+    refresh(this, [
+      ['div.block', ['log-entry', '']],
+      ['div.block', entryFilter({ oninput })],
+      [`div.block#${listid}`, entries.length ? listEntries(entries) : '']
+    ])
+    // refresh when db changes
     db.changes({ since: 'now', live: true, ...INCLUDE_DOCS })
       .on('change', async () => {
         entries = await getDocsByTime()
-        refresh()
+        refreshEntries()
       })
   }
 }

@@ -1,18 +1,20 @@
 /* global HTMLElement, customElements */
+// the example in the readme is a little more... rudimentary...
 
-import { alchemize, snag } from './alchemist.js'
+import { snag, refresh } from './alchemist.js'
 
 function counterview () {
   let i = 0
+  const id = 'counter'
   function onclick () {
-    snag('counter').innerText = String(++i)
+    snag(id).innerText = String(++i)
   }
-  return alchemize(['button#counter', { onclick, style: 'width: 100%;' }, i])
+  return [`button#${id}`, { onclick, style: 'width: 100%;' }, i]
 }
 
 class CounterApp extends HTMLElement {
   connectedCallback () {
-    this.appendChild(counterview())
+    refresh(this, counterview)
   }
 }
 
