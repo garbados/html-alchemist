@@ -2,3 +2,4 @@ node_modules
 coverage
 index.min.js
 www/alchemist.js
+www/alchemist.js.map

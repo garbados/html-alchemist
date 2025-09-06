@@ -1,64 +1,33 @@
-/* global HTMLElement, customElements, document, PouchDB, emit */
+/* global HTMLElement, customElements, PouchDB, emit, confirm */
 
-import { alchemize, listento, snag } from './alchemist.js'
+import { forcePut, forceRemove, resToDocs, INCLUDE_DOCS, queryToDocs, wordsearch } from './db.js'
+import { refresh, snag } from './alchemist.js'
 import { default as uuid } from 'https://cdn.jsdelivr.net/npm/uuid@11.1.0/dist/esm-browser/v4.js' // eslint-disable-line
 
 /* DATABASE BUSINESS */
 
 const db = new PouchDB('alchemist-todo')
+const idprefix = 'todo-item'
 
 const DDOC = {
   _id: '_design/todo',
   views: {
     todos: {
       map: function (doc) {
-        if (doc._id.match(/^todo-item/)) {
+        if (doc._id.match(/^%s\/.+$/)) {
           emit(doc.text)
         }
-      }.toString()
+      }.toString().replace('%s', idprefix)
     },
-    words: {
-      map: function (doc) {
-        if (doc._id.match(/^todo-item/)) {
-          for (const word of doc.text.split(' ')) {
-            emit(word)
-          }
-        }
-      }.toString()
-    }
+    words: { map: wordsearch(idprefix) }
   }
 }
 
-await forcePut(DDOC) // create indices
+await forcePut(db, DDOC) // setup indices
 
-async function forcePut (doc) {
-  try {
-    return await db.put(doc)
-  } catch (e) {
-    if (e.status !== 409) throw e
-    const { _rev, ...oldDoc } = await db.get(doc._id)
-    if (JSON.stringify(oldDoc) !== JSON.stringify(doc)) {
-      return db.put({ ...doc, _rev })
-    }
-  }
-}
+// QUERIES
 
-async function forceRemove (doc) {
-  try {
-    return await db.remove(doc)
-  } catch (e) {
-    if (e.status !== 409) throw e
-    const { _id, _rev } = await db.get(doc._id)
-    return db.remove({ _id, _rev })
-  }
-}
-
-async function allDocsByText () {
-  const { rows } = await db.query('todo/todos', {
-    include_docs: true
-  })
-  return rows.map(({ doc }) => doc)
-}
+const allDocsByText = queryToDocs.bind(null, db, 'todo/todos')
 
 async function allDocsByWord (w) {
   const { rows: matches } = await db.query('todo/words', {
@@ -69,39 +38,40 @@ async function allDocsByWord (w) {
     if (!uniq[id]) uniq[id] = true
     return uniq
   }, {}))
-  const { rows } = await db.allDocs({ keys: ids, include_docs: true })
-  return rows.map(({ doc }) => doc)
+  const res = await db.allDocs({ keys: ids, ...INCLUDE_DOCS })
+  return resToDocs(res)
 }
 
 // TEMPLATES
 
-const editTodoItem = (text, { textinputid, textsaveid, error }) => [
+const editTodoItem = (text, { textinputid, onsave, error }) => [
   'form',
   [
     'fieldset',
     { role: 'group' },
     [`input#${textinputid}`, { type: 'text', value: text, placeholder: 'What needs doing?' }],
-    [`button#${textsaveid}`, 'Save']
+    ['button', { onclick: onsave }, 'Save']
   ],
   error ? ['small', error] : ''
 ]
 
-const showTodoItem = (text, { texteditid, todocompleteid }) => [
+const showTodoItem = (text, { oncomplete, onedit }) => [
   'section.grid',
   ['article', text],
   [
     'div',
     { role: 'group' },
-    [`button.secondary#${todocompleteid}`, 'Done'],
-    [`button.contrast#${texteditid}`, 'Edit']
+    ['button.secondary', { onclick: oncomplete }, 'Done'],
+    ['button.contrast', { onclick: onedit }, 'Edit']
   ]
 ]
 
-const todoFilter = (filterid) => [
+const todoFilter = ({ oninput }) => [
   'form',
-  [`input#${filterid}`, {
+  ['input', {
     type: 'text',
-    placeholder: 'Filter...'
+    placeholder: 'Filter...',
+    oninput
   }]
 ]
 
@@ -118,79 +88,78 @@ const todoList = (docs) => docs.map(({ text, _id, _rev }) => [
 
 class TodoItem extends HTMLElement {
   connectedCallback () {
+    const elem = this
     let error
     let text = this.getAttribute('todo-text') || ''
     const id = this.getAttribute('todo-id') || `todo-item/${uuid()}`
     let rev = this.getAttribute('todo-rev') || null
     let editing = !text
     const textinputid = uuid()
-    const textsaveid = uuid()
-    const texteditid = uuid()
-    const todocompleteid = uuid()
-    const refresh = () => {
-      if (editing) {
-        this.replaceChildren(alchemize(editTodoItem(text, { textinputid, textsaveid, error })))
-        listento(textsaveid, 'click', async (event) => {
-          event.preventDefault()
-          const oldText = text
-          text = snag(textinputid).value
-          if (text.length === 0) {
-            error = 'A todo cannot be empty.'
-          } else {
-            error = null
-            editing = false
-            if (text !== oldText) {
-              const doc = { _id: id, text }
-              if (rev) doc._rev = rev
-              const res = await forcePut(doc)
-              rev = res.rev
-            }
-          }
-          refresh()
-        })
+    async function onsave (e) {
+      e.preventDefault()
+      const oldText = text
+      text = snag(textinputid).value
+      if (text.length === 0) {
+        error = 'A todo cannot be empty.'
       } else {
-        this.replaceChildren(alchemize(showTodoItem(text, { texteditid, todocompleteid })))
-        listento(todocompleteid, 'click', async () => {
-          await forceRemove({ _id: id, _rev: rev })
-        })
-        listento(texteditid, 'click', () => {
-          editing = true
-          refresh()
-        })
+        error = null
+        editing = false
+        if (text !== oldText) {
+          const doc = { _id: id, text }
+          if (rev) doc._rev = rev
+          const res = await forcePut(db, doc)
+          rev = res.rev
+        }
+      }
+      refreshItem()
+    }
+    async function onedit (e) {
+      e.preventDefault()
+      editing = true
+      refreshItem()
+    }
+    async function oncomplete (e) {
+      e.preventDefault()
+      if (confirm(`Is this done? ${text}`)) { await forceRemove(db, { _id: id, _rev: rev }) }
+    }
+    function refreshItem () {
+      if (editing) {
+        refresh(elem, editTodoItem(text, { textinputid, onsave, error }))
+      } else {
+        refresh(elem, showTodoItem(text, { onedit, oncomplete }))
       }
     }
     // initialize the edit/show cycle
-    refresh()
+    refreshItem()
   }
 }
 
 class TodoList extends HTMLElement {
   async connectedCallback () {
     const newentryid = uuid()
-    const filterid = uuid()
     const todoid = uuid()
-    let todos = await allDocsByText()
-    this.replaceChildren(alchemize([
-      [`div#${newentryid}`, ['todo-item', '']],
-      ['div', todoFilter(filterid)],
-      [`div#${todoid}`, todoList(todos)]
-    ]))
-    const refresh = () => {
-      snag(newentryid).replaceChildren(alchemize(['todo-item', '']))
-      snag(todoid).replaceChildren(alchemize(todoList(todos)))
+    async function oninput (e) {
+      e.preventDefault()
+      const todos = await allDocsByWord(e.target.value)
+      const sorted = todos.toSorted((a, b) => a.text > b.text)
+      await refreshList(sorted)
     }
-    listento(filterid, 'input', async (event) => {
-      event.preventDefault()
-      const w = document.getElementById(filterid).value
-      const unsorted = await allDocsByWord(w)
-      todos = unsorted.toSorted((a, b) => a.text > b.text)
-      refresh()
-    })
+    const refreshList = async (todos) => {
+      if (!todos) todos = await allDocsByText()
+      refresh(newentryid, ['todo-item', ''])
+      refresh(todoid, todoList(todos))
+    }
+    // initial state
+    refresh(this, [
+      [`div#${newentryid}`, ''],
+      ['div', todoFilter({ oninput })],
+      [`div#${todoid}`, '']
+    ])
+    // refresh state from
+    await refreshList()
+    // refresh when db changes
     db.changes({ since: 'now', live: true })
-      .on('change', async () => {
-        todos = await allDocsByText()
-        refresh()
-      })
+      .on('change', () => refreshList())
   }
 }
 

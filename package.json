@@ -13,7 +13,7 @@
     "commit": "git add -p && git commit",
     "test": "standard && mocha",
     "rollup": "rollup --config rollup.config.js",
-    "minify": "terser index.js -c -m -o www/alchemist.js",
+    "minify": "terser index.js -c -m -o www/alchemist.js --source-map",
     "watch": "sane \"npm run minify\" . --glob=index.js",
     "serve": "serve www",
     "dev": "run-p watch serve",

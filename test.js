@@ -351,7 +351,11 @@ describe('html-alchemist', function () {
             callback(eventName)
           },
           replaceChildren (potion) {
-            return potion
+            if (typeof potion === 'function') {
+              return potion()
+            } else {
+              return potion
+            }
           }
         }
       }
@@ -373,6 +377,8 @@ describe('html-alchemist', function () {
     it('refresh', function () {
       const expr = 'aaa'
       assert.strictEqual(expr, refresh('???', () => expr, fakedocument, window.HTMLElement))
+      const elem = fakedocument.getElementById()
+      assert.strictEqual(expr, refresh(elem, () => expr, fakedocument, elem.constructor))
     })
   })
 })
