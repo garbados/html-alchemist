@@ -237,12 +237,14 @@ describe('html-alchemist', function () {
   it('should handle some basic inputs', function () {
     const potion = alchemize([
       'section.container#main>div.content.box',
+      { special: 'something' },
       ['h1.title', 'hello world'],
       ['p.subtitle', 'lead to gold']
     ], window.document, window.HTMLElement)
     assert.strictEqual(potion.localName, 'section')
     assert.strictEqual(potion.id, 'main')
     assert.strictEqual(potion.className, 'container')
+    assert.strictEqual(potion.getAttribute('special'), 'something')
     assert.strictEqual(potion.children[0].localName, 'div')
     assert.strictEqual(potion.children[0].id, '')
     assert.strictEqual(potion.children[0].className, 'content box')

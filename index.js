@@ -8,7 +8,7 @@ try {
 const isStr = s => typeof s === 'string'
 const isFn = f => typeof f === 'function'
 const isNum = n => typeof n === 'number'
-const isObj = (x, HTMLElement = myElement) =>
+const isNotObj = (x, HTMLElement = myElement) =>
   isStr(x) || Array.isArray(x) || x instanceof HTMLElement || isFn(x) || isNum(x) || nullish(x)
 const nullish = x => [null, undefined, false].includes(x)
 
@@ -21,27 +21,26 @@ function elemFromExpr (expr, document = mydocument, HTMLElement = myElement) {
   let [rawtag, props, ...children] = expr
   const [subtag, ...subtags] = rawtag.split('>')
   const [idtag, id] = subtag.split('#')
-  let [tag, ...classes] = idtag.split('.')
-  if (isObj(props, HTMLElement)) {
+  const [tag, ...classes] = idtag.split('.')
+  if (isNotObj(props, HTMLElement)) {
     children = [props, ...children]
     props = {}
   }
+  if (id) props.id = id
+  if (classes.length) props.class = (props.class || '') + classes.join(' ')
   const rootelem = document.createElement(tag)
   let elem = rootelem
-  if (id || props.id) elem.setAttribute('id', id || props.id)
-  if (props.classes) classes = [...classes, ...props.classes.split(' ')]
-  if (classes.length) elem.setAttribute('class', classes.join(' '))
-  for (const subtag of subtags) {
-    const subelem = elemFromExpr([subtag], document, HTMLElement)
-    elem.appendChild(subelem)
-    elem = subelem
-  }
-  for (const [k, v] of Object.entries(props || {})) {
+  for (const [k, v] of Object.entries(props)) {
     if (k.startsWith('on')) {
       elem[k] = v
     } else {
       elem.setAttribute(k, v)
     }
+  }
+  for (const subtag of subtags) {
+    const subelem = elemFromExpr([subtag], document, HTMLElement)
+    elem.appendChild(subelem)
+    elem = subelem
   }
   for (const body of children) {
     if (nullish(body)) continue
