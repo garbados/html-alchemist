@@ -1,6 +1,6 @@
 # Alchemist (html-alchemist)
 
-[![NPM Version](https://badge.fury.io/js/html-alchemist.svg)](https://badge.fury.io/js/html-alchemist)
+[![NPM Version](https://img.shields.io/npm/v/html-alchemist)](https://www.npmjs.com/package/html-alchemist)
 [![Build and Test](https://github.com/garbados/html-alchemist/actions/workflows/test.yml/badge.svg)](https://github.com/garbados/html-alchemist/actions/workflows/test.yml)
 [![Coverage Status](https://coveralls.io/repos/github/garbados/html-alchemist/badge.svg?branch=main)](https://coveralls.io/github/garbados/html-alchemist?branch=main)
 
