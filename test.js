@@ -244,7 +244,7 @@ describe('html-alchemist', function () {
     assert.strictEqual(potion.localName, 'section')
     assert.strictEqual(potion.id, 'main')
     assert.strictEqual(potion.className, 'container')
-    assert.strictEqual(potion.getAttribute('special'), 'something')
+    assert.strictEqual(potion.children[0].getAttribute('special'), 'something') // props go on final element in tag list
     assert.strictEqual(potion.children[0].localName, 'div')
     assert.strictEqual(potion.children[0].id, '')
     assert.strictEqual(potion.children[0].className, 'content box')
@@ -287,6 +287,11 @@ describe('html-alchemist', function () {
     const potion = alchemize(['button', { onclick: () => {} }, 'hello world'], window.document, window.HTMLElement)
     assert.strictEqual(potion.outerHTML, '<button>hello world</button>')
     assert.strict(typeof potion.onclick === 'function')
+  })
+
+  it('should assign props to last sub-element', function () {
+    const potion = alchemize(['p>span', { id: 'ok' }, 'hello world'], window.document, window.HTMLElement)
+    assert.strictEqual(potion.outerHTML, '<p><span id="ok">hello world</span></p>')
   })
 
   it('should handle arbitrary inputs', function () {

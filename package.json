@@ -11,7 +11,7 @@
   "scripts": {
     "precommit": "standard --fix",
     "commit": "git add -p && git commit",
-    "test": "standard && mocha",
+    "test": "standard --fix && mocha",
     "rollup": "rollup --config rollup.config.js",
     "minify": "terser index.js -c -m -o www/alchemist.js --source-map",
     "watch": "sane \"npm run minify\" . --glob=index.js",

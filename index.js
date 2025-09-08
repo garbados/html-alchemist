@@ -26,21 +26,21 @@ function elemFromExpr (expr, document = mydocument, HTMLElement = myElement) {
     children = [props, ...children]
     props = {}
   }
-  if (id) props.id = id
-  if (classes.length) props.class = (props.class || '') + classes.join(' ')
   const rootelem = document.createElement(tag)
   let elem = rootelem
+  if (id) elem.setAttribute('id', id)
+  if (classes.length) elem.setAttribute('class', classes.join(' '))
+  for (const subtag of subtags) {
+    const subelem = elemFromExpr([subtag], document, HTMLElement)
+    elem.appendChild(subelem)
+    elem = subelem
+  }
   for (const [k, v] of Object.entries(props)) {
     if (k.startsWith('on')) {
       elem[k] = v
     } else {
       elem.setAttribute(k, v)
     }
-  }
-  for (const subtag of subtags) {
-    const subelem = elemFromExpr([subtag], document, HTMLElement)
-    elem.appendChild(subelem)
-    elem = subelem
   }
   for (const body of children) {
     if (nullish(body)) continue
