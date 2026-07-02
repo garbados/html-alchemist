@@ -239,7 +239,8 @@ describe('html-alchemist', function () {
       'section.container#main>div.content.box',
       { special: 'something' },
       ['h1.title', 'hello world'],
-      ['p.subtitle', 'lead to gold']
+      ['p.subtitle', 'lead to gold'],
+      ['input', { type: 'checkbox', checked: false }]
     ], window.document, window.HTMLElement)
     assert.strictEqual(potion.localName, 'section')
     assert.strictEqual(potion.id, 'main')
@@ -256,6 +257,8 @@ describe('html-alchemist', function () {
     assert.strictEqual(potion.children[0].children[1].id, '')
     assert.strictEqual(potion.children[0].children[1].localName, 'p')
     assert.strictEqual(potion.children[0].children[1].innerHTML, 'lead to gold')
+    assert.strictEqual(potion.children[0].children[2].localName, 'input')
+    assert.strictEqual(potion.children[0].children[2].checked, false)
   })
 
   it('should handle being given actual html entities', function () {

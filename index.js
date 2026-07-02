@@ -36,7 +36,7 @@ function elemFromExpr (expr, document = mydocument, HTMLElement = myElement) {
     elem = subelem
   }
   for (const [k, v] of Object.entries(props)) {
-    if (k.startsWith('on') || k == 'checked' || k == 'disabled') {
+    if (k.startsWith('on') || k === 'checked' || k === 'disabled') {
       elem[k] = v
     } else {
       elem.setAttribute(k, v)
